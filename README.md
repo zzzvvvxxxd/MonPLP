@@ -1,0 +1,4 @@
+# MonPLP
+基于Mongodb的KB逻辑
+
+最近尝试在Mongodb上存储和管理知识库，并且在Key-Value数据库上进行简单的unify和inference
