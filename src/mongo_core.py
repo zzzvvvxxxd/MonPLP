@@ -9,7 +9,8 @@ from pymongo import ReturnDocument
 
 '''
 Mongo类
-    建立连接，主要用于获取指定数据库内特定的collection
+版本：2015/06/22
+建立连接，主要用于获取指定数据库内特定的collection
 '''
 class Mongo(object):
     def __init__(self, name, host="localhost", port=27017):
@@ -62,7 +63,7 @@ class TermCollection(object):
             self.num = self.counter['num']
             print '---------Load [term] collection done, all %d documents---------' % self.num  #成功信息，显示当前term数
 
-    def insert_one(self, document):
+    def __insert_one(self, document):
         #检查id pool中是否有id，若有且小于当前num值，则取出作为id
         new_id = -1
         id_num = self.delCollection.count()
@@ -81,7 +82,7 @@ class TermCollection(object):
         self.collection.insert_one(document)
 
     #删除一条记录
-    def delete_one(self, filter):
+    def __delete_one(self, filter):
         try:
             del_doc = self.collection.find_one_and_delete(filter)
             id = del_doc['id']
@@ -90,16 +91,20 @@ class TermCollection(object):
         except:
             print "[Error]delete error. Sure the doc in the term collection?"
 
+    #修正数据库，目前并不需要
     def repair(self):
         #检查计数是否正确
         self.num = self.collection.find_one({"term":"__counter"})['num']
         del_num = self.delCollection.count()
         term_num = self.collection.count() - 1
+        #term表中counter的num字段应该 = del掉的id数量 + 现有term数量
         if self.num != del_num + term_num:
-            #repair function need to be implemented
-            pass
-            return False
-        return True
+            print "[Error] num wrong"
+            # <备份现有数据，导入term_wrong表>
+            self._reduce() #回退数据库，出现重大逻辑错误，后期这里添加
+        else:   #若一致
+            print "The term collection is all right"
+
 
     #关闭数据库连接，断开term集合的操作
     def close(self):
@@ -107,21 +112,31 @@ class TermCollection(object):
 
     #直接insert term，封装方法
     def insert_term(self, term):
-        self.insert_one({'term':term})
+        self.__insert_one({'term':term})
 
     #直接delete term，封装方法
     def delete_term(self, term):
-        self.delete_one({'term':term})
+        self.__delete_one({'term':term})
 
+    #reduce
+    #DEPRECATED - use [repair] to repair the term collection
+    def _reduce(self):
+        #回退数据库到无数据版本,除非调试，否则不推荐使用
+        #删除term集合,重置counter
+        self.collection.drop()
+        self.collection.insert_one({"term":"__counter",
+                                        "num":0,
+                                        "desc":"counter to make term collection'id inc automatically"})
+        #删除id表内容
+        self.delCollection.drop()
+        self.mongo.db.create_collection(self.idTable)
     #Class TermCollection Done!
+
+class RelationCollection(object):
+    def __init__(self):
+        self.name = "relation"
 
 #test
 if __name__ == "__main__":
     term = TermCollection()
-    term.insert_term("澳门")
     term.close()
-
-
-
-
-
