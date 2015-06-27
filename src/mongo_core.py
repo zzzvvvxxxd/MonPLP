@@ -91,7 +91,11 @@ class TermCollection(object):
         except:
             print "[Error]delete error. Sure the doc in the term collection?"
 
+<<<<<<< HEAD
     #修正数据库，目前并不需要
+=======
+    #检查Term表是否存在异常，如果有异常，则修复
+>>>>>>> origin/master
     def repair(self):
         #检查计数是否正确
         self.num = self.collection.find_one({"term":"__counter"})['num']
@@ -134,9 +138,25 @@ class TermCollection(object):
 
 class RelationCollection(object):
     def __init__(self):
+<<<<<<< HEAD
         self.name = "relation"
+=======
+        self.name = 'relation'
+        self.mongo = Mongo('logic')
+        self.collection = self.mongo[self.name]
+
+    def insert_one(self, document):
+        pass
+
+
+>>>>>>> origin/master
 
 #test
 if __name__ == "__main__":
     term = TermCollection()
+<<<<<<< HEAD
     term.close()
+=======
+    term.insert_term("澳门")
+    term.close()
+>>>>>>> origin/master
